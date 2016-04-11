@@ -1,0 +1,22 @@
+<html>
+<head><title>demo</title></head>
+<body>
+
+<ul>
+    <li><a href="demo://question?guid=1">Question 1</a></li>
+    <li><a href="demo://question?guid=2">Question 2</a></li>
+</ul>
+
+<ul>
+    <li><a href="demo://pdfreader?file=a.pdf">Document A</a></li>
+    <li><a href="demo://pdfreader?file=b.pdf">Document B</a></li>
+</ul>
+
+
+<script>
+    function afterDemo(guid, value) {
+        document.body.innerHTML += "<div>" + guid + ": " + value + "</div>";
+    }
+</script>
+</body>
+</html>
