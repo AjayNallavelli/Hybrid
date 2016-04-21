@@ -4,19 +4,24 @@
 
 <ul>
     <li><a href="demo://question?guid=1">Question 1</a></li>
-    <li><a href="demo://question?guid=2">Question 2</a></li>
+    <li><a href="javascript:JO.openQuestion('2');">Question 2</a></li>
 </ul>
 
 <ul>
     <li><a href="demo://pdfreader?file=a.pdf">Document A</a></li>
-    <li><a href="demo://pdfreader?file=b.pdf">Document B</a></li>
+    <li><a href="javascript:JO.openPdfReader('b.pdf')">Document B</a></li>
 </ul>
 
 
 <script>
-    function afterDemo(guid, value) {
+    function afterQuestion(guid, value) {
         document.body.innerHTML += "<div>" + guid + ": " + value + "</div>";
     }
+
+    function afterPdfReader(pages) {
+        document.body.innerHTML += "<div>number of pages: " + pages + "</div>";
+    }
+
 </script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 package it.sarzalski.android.hybrid;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.UrlQuerySanitizer;
 import android.os.Bundle;
@@ -7,6 +8,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -24,6 +26,7 @@ public class MainActivity extends ActionBarActivity {
 
     private WebView webView;
 
+    @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,16 +41,12 @@ public class MainActivity extends ActionBarActivity {
                 if (url.startsWith(PREFIX_DEMO_QUESTION)) {
                     UrlQuerySanitizer sanitizer = new UrlQuerySanitizer(url);
                     String guid = sanitizer.getValue(PARAMETER_GUID);
-                    Intent intent = new Intent(MainActivity.this, QuestionActivity.class);
-                    intent.putExtra(QuestionActivity.INPUT_PARAMETER_GUID, guid);
-                    startActivityForResult(intent, REQUEST_CODE_QUESTION);
+                    openQuestionActivity(guid);
                     return true;
                 } else if (url.startsWith(PREFIX_DEMO_PDFREADER)) {
                     UrlQuerySanitizer sanitizer = new UrlQuerySanitizer(url);
                     String fileName = sanitizer.getValue(PARAMETER_FILE);
-                    Intent intent = new Intent(MainActivity.this, PdfReaderActivity.class);
-                    intent.putExtra(PdfReaderActivity.INPUT_PARAMETER_FILENAME, fileName);
-                    startActivityForResult(intent, REQUEST_CODE_PDFREADER);
+                    openPdfReaderActivity(fileName);
                     return true;
                 }
 
@@ -55,9 +54,23 @@ public class MainActivity extends ActionBarActivity {
             }
         };
 
+        webView.addJavascriptInterface(new JavascriptObject(), "JO");
+
         webView.setWebViewClient(webViewClient);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.loadUrl(INDEX_FILE);
+    }
+
+    private void openQuestionActivity(String guid) {
+        Intent intent = new Intent(this, QuestionActivity.class);
+        intent.putExtra(QuestionActivity.INPUT_PARAMETER_GUID, guid);
+        startActivityForResult(intent, REQUEST_CODE_QUESTION);
+    }
+
+    private void openPdfReaderActivity(String file) {
+        Intent intent = new Intent(this, PdfReaderActivity.class);
+        intent.putExtra(PdfReaderActivity.INPUT_PARAMETER_FILENAME, file);
+        startActivityForResult(intent, REQUEST_CODE_PDFREADER);
     }
 
     @Override
@@ -71,11 +84,19 @@ public class MainActivity extends ActionBarActivity {
                 Log.i(MainActivity.class.getSimpleName(), "Result OK" +  value);
 
                 if (webView != null) {
-                    webView.loadUrl("javascript:afterDemo(\"" + guid + "\",\"" + value + "\");");
+                    webView.loadUrl("javascript:afterQuestion(\"" + guid + "\",\"" + value + "\");");
                 }
 
             } else if (resultCode == RESULT_CANCELED) {
                 Log.i(MainActivity.class.getSimpleName(), "Result CANCELED");
+            }
+        } else if (requestCode == REQUEST_CODE_PDFREADER) {
+            if (resultCode == RESULT_OK) {
+                int pages = data.getIntExtra(PdfReaderActivity.OUTPUT_PARAMETER_PAGES, -1);
+
+                if (webView != null) {
+                    webView.loadUrl("javascript:afterPdfReader(\"" + pages + "\");");
+                }
             }
         }
     }
@@ -100,5 +121,19 @@ public class MainActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private class JavascriptObject {
+
+        @JavascriptInterface
+        public void openQuestion(String guid) {
+            openQuestionActivity(guid);
+        }
+
+        @JavascriptInterface
+        public void openPdfReader(String file) {
+            openPdfReaderActivity(file);
+        }
+
     }
 }
